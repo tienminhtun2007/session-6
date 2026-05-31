@@ -27,3 +27,57 @@ having SUM(Orders.total_amount) > 50000000;
 
 select * from Orders
 order by total_amount desc limit 5;
+
+
+create table CUSTOMER(
+    id serial primary key,
+    name VARCHAR(100)
+);
+
+select c.name, sum(o.total_amount) as total_buy from CUSTOMER c
+inner join Orders o on o.customer_id = c.id
+group by c.name;
+
+select
+    c.name as customer_name,
+    sum(o.total_amount) as total_spent
+from Customer as c
+         join Orders as o
+              on c.id = o.customer_id
+group by c.id, c.name
+having sum(o.total_amount) = (
+    select max(total_spent)
+    from (
+             select
+                 customer_id,
+                 sum(total_amount) as total_spent
+             from Orders
+             group by customer_id
+         ) as customer_totals
+);
+
+select
+    c.id as customer_id,
+    c.name as customer_name,
+from Customer as c
+         left join Orders as o
+                   on c.id = o.customer_id
+where o.id is null;
+
+select
+    c.name as customer_name,
+    sum(o.total_amount) as total_spent
+from Customer as c
+         join Orders as o
+              on c.id = o.customer_id
+group by c.id, c.name
+having sum(o.total_amount) > (
+    select avg(total_spent)
+    from (
+             select
+                 customer_id,
+                 sum(total_amount) as total_spent
+             from Orders
+             group by customer_id
+         ) as customer_totals
+);
